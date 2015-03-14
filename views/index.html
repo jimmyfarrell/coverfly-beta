@@ -15,11 +15,17 @@
 <body>
 	<h1>Find Covers of a Song</h1>
 	<form action="/search" method="POST">
-	  <label for="artist_field">Artist:</label>
-	  <input name="artist" type="text" id="name_field"/>
+		<label for="artist_field">Artist:</label>
+		<input name="artist" type="text" id="artist_field"/>
 	  <label for="song_field">Song:</label>
 	  <input name="song" type="text" id="song_field"/>
 	  <input type="submit" value="Submit" />
 	</form>
+
+<div>
+{% for song in songs %}
+<iframe src="https://embed.spotify.com/?uri={{song.uri}}" width="300" height="80" frameborder="0" allowtransparency="true"></iframe>
+</div>
+
 </body>
 </html>
