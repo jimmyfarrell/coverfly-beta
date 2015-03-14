@@ -7,8 +7,8 @@
 	<title>Coverfly</title>
 	<meta name="description" content="Find cool covers of your favorite songs!">
 	<meta name="author" content="Jimmy Farrell">
-	<link href="bootstrap.min.css" rel="stylesheet">
-	<!-- <link rel="stylesheet" href="styles.css"> -->
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -23,32 +23,42 @@
 			  <input type="submit" value="Submit" />
 			</form>
 		</div>
-		<div id="spotify-results" class="col-xs-4">
-		{% for track in spotifyResults %}
-			<h3>{{track.name}}</h3>
-			<audio controls>
-			 <source src='{{track.preview_url}}' type='audio/mpeg'>
-			 <p>Your user agent does not support the HTML5 Audio element.</p>
-			</audio>
-		{% endfor %}
+		<div id="spotify-results" class="">
+			<h2 class="stream-service">Spotify</h2>
+
+			{% for track in spotifyResults %}
+			<div class="result spotify-track">
+				<p class="track-name">{{track.name}} – {{track.artists[0].name}}</p>
+				<audio controls>
+				 <source src='{{track.preview_url}}' type='audio/mpeg'>
+				 <p>Your user agent does not support the HTML5 Audio element.</p>
+				</audio>
+			</div>
+			{% endfor %}
+
 		</div>
-		<div id="soundcloud-results" class="col-xs-4">
-		{% for track in soundcloudResults %}
-			<h3>{{track.user.username}} – {{track.title}}</h3>
-			<iframe width="100%" height="166" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url={{track.uri}}&amp;color=ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false"></iframe>
-		{% endfor %}
+		<div id="soundcloud-results" class="">
+			<h2 class="stream-service">SoundCloud</h2>
+
+			{% for track in soundcloudResults %}
+			<div class="result soundcloud-track">
+				<iframe width="100%" height="100" scrolling="no" frameborder="no" src="https://w.soundcloud.com/player/?url={{track.uri}}&amp;color=ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false"></iframe>
+			</div>
+			{% endfor %}
+			
 		</div>
-		<div id="youtube-results" class="col-xs-4">
-		{% for track in results %}
-			<h3>{{track.name}}</h3>
-			<audio controls>
-			 <source src='{{track.preview_url}}' type='audio/mpeg'>
-			 <p>Your user agent does not support the HTML5 Audio element.</p>
-			</audio>
-		{% endfor %}
+		<div id="youtube-results" class="">
+			<h2 class="stream-service">YouTube</h2>
+
+			{% for video in youtubeResults %}
+			<div class="result youtube-video">
+				<iframe width="300" height="169" src="https://www.youtube.com/embed/{{video.id.videoId}}" frameborder="0" allowfullscreen></iframe>
+			</div>
+			{% endfor %}
+
 		</div>
 	</div>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="jquery-2.1.3.min.js"></script>
 	<script src="bootstrap.min.js"></script>
 </body>
 </html>

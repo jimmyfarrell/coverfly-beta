@@ -1,0 +1,10 @@
+// CSS
+
+a {
+	color: black
+}
+
+.result {
+	display: inline,
+	float: left
+}

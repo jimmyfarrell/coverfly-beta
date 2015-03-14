@@ -33,36 +33,103 @@ app.get('/search', function(req, res) {
 });
 
 app.post('/search', function(req, res) {
-	var artist = req.body.artist;
-	var song = req.body.song;
+	var artist = req.body.artist.toLowerCase();
+	var song = req.body.song.toLowerCase();
 	var results = {};
 	var findResults = [
 		function(done) {
-			request('https://api.spotify.com/v1/search?q=' + song + '&type=track', function(error, response, body) {
+
+			var spotifyParameters = {
+				q: 'cover+track:"' + song + '"',
+				market: 'US',
+				type: 'track'
+			};
+			var spotifyQueryArr = [];
+			for (var parameter in spotifyParameters) {
+				spotifyQueryArr.push(parameter + '=' + spotifyParameters[parameter]);
+			}
+			var spotifyQuery = spotifyQueryArr.join('&');
+
+			request('https://api.spotify.com/v1/search?' + spotifyQuery, function(error, response, body) {
 				if (error) throw 'Spotify Search Error';
-				results.spotifyResults = JSON.parse(body).tracks.items;
-				console.log('spotify results');
+
+				var spotifyResultsAll = JSON.parse(body).tracks.items;
+				spotifyResultsAll.sort(spotifyCompare).reverse();
+
+				var spotifyResultsFiltered = [];
+				for (var i = 0; i < spotifyResultsAll.length; i++) {
+
+					var artistCounter = 0;
+					for (var j = 0; j < spotifyResultsAll.length; j++) {
+						if (spotifyResultsAll[j].artists[0].name === spotifyResultsAll[i].artists[0].name) artistCounter++;
+					}
+
+					if (artistCounter === 1) spotifyResultsFiltered.push(spotifyResultsAll[i]);
+				}
+
+				results.spotifyResults = spotifyResultsFiltered.slice(0, 5);
 				done(null);
 			});
 		},
+		
 		function(done) {
-			request('https://api.soundcloud.com/tracks.json?consumer_key=' + keys.soundcloudId + '&q=' + song + ' ' + artist, function(err, res, body) {
-				if (err) throw 'SoundCloud Search Error';
-				results.soundcloudResults = JSON.parse(body);
-				console.log('soundcloud results', console.log(results.soundcloudResults[0]));
+
+			var soundcloudParameters = {
+				q: 'cover+"' + song + '"+' + artist,
+				filter: 'public',
+				order: 'hotness',
+				consumer_key: keys.soundcloudId
+			};
+			var soundcloudQueryArr = [];
+			for (var parameter in soundcloudParameters) {
+				soundcloudQueryArr.push(parameter + '=' + soundcloudParameters[parameter]);
+			}
+			var soundcloudQuery = soundcloudQueryArr.join('&');
+
+			request('https://api.soundcloud.com/tracks.json?' + soundcloudQuery, function(error, response, body) {
+				if (error) throw 'SoundCloud Search Error';
+
+				var soundcloudResultsAll = JSON.parse(body);
+				// soundcloudResultsAll.sort(soundcloudCompare).reverse();
+
+				results.soundcloudResults = soundcloudResultsAll.slice(0, 5);
 				done(null);
 			});
 		},
+
 		function(done) {
-			request('https://www.googleapis.com/youtube/v3/search?part=snippet&q=' + song + ' cover' + '&key=' + keys.youtubeKey, function(err, res, videos) {
-				if (err) throw 'YouTube Search Error';
-				console.log('youtube results');
+
+			var youtubeParameters = {
+				q: 'cover+' + song,
+				part: 'snippet',
+				order: 'viewCount',
+				type: 'video',
+				videoEmbeddable: 'true',
+				key: keys.youtubeKey
+			};
+			var youtubeQueryArr = [];
+			for (var parameter in youtubeParameters) {
+				youtubeQueryArr.push(parameter + '=' + youtubeParameters[parameter]);
+			}
+			var youtubeQuery = youtubeQueryArr.join('&');
+
+			request('https://www.googleapis.com/youtube/v3/search?' + youtubeQuery, function(error, response, body) {
+				if (error) throw 'YouTube Search Error';
+				var youtubeResults = JSON.parse(body);
+
+				results.youtubeResults = youtubeResults.items;
+				console.log(body);
 				done(null);
 			});
 		}
 	];
 	async.parallel(findResults, function(err) {
-		console.log('then results');
 		res.render('index', results);
 	});
 });
+
+function spotifyCompare(a, b) {
+	if (a.popularity > b.popularity) return 1;
+	if (a.popularity < b.popularity) return -1;
+	return 0;
+}
