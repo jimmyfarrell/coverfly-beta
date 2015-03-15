@@ -4,7 +4,6 @@ var logger = require('morgan');
 var swig = require('swig');
 var bodyParser = require('body-parser');
 var request = require('request');
-// var Q = require('q');
 var async = require('async');
 var keys = require('./keys');
 
@@ -35,27 +34,32 @@ app.get('/search', function(req, res) {
 app.post('/search', function(req, res) {
 	
 	var artist = '';
-	artist = req.body.artist.toLowerCase().replace(/\W(the)\W/g, ' ').replace(/\Wa\W/g, ' ');
+	artist = req.body.artist.toLowerCase();//.replace( /\W(the)\W|\Wa\W|\W(an)\W/ , ' ');
 	var song = '';
-	song = req.body.song.toLowerCase().replace(/\W(the)\W/g, ' ').replace(/\Wa\W/g, ' ');
+	song = req.body.song.toLowerCase();//.replace( /\W(the)\W|\Wa\W|\W(an)\W/ , ' ');
+
+	if (!artist && !song) {
+		res.render('index', {});
+		return;
+	}
 
 	var results = {};
 	var findResults = [
 		function(done) {
 
-			var spotifyBaseUrl = 'https://api.spotify.com/v1/search?';
+			var spotifyBaseUrl = 'https://api.spotify.com/v1/search';
 			var spotifyParameters = {
 				q: 'track:"' + song + '"+' + artist,
 				market: 'US',
 				type: 'track'
 			};
 			var spotifyQueryArr = [];
-			for (var parameter in spotifyParameters) {
-				spotifyQueryArr.push(parameter + '=' + spotifyParameters[parameter]);
+			for (var spotifyFilter in spotifyParameters) {
+				spotifyQueryArr.push(spotifyFilter + '=' + spotifyParameters[spotifyFilter]);
 			}
 			var spotifyQuery = spotifyQueryArr.join('&');
 
-			request(spotifyBaseUrl + spotifyQuery, function(error, response, body) {
+			request(spotifyBaseUrl + '?' + spotifyQuery, function(error, response, body) {
 
 				var spotifyResultsAll = JSON.parse(body).tracks.items;
 				spotifyResultsAll.sort(spotifyCompare).reverse();
@@ -78,34 +82,33 @@ app.post('/search', function(req, res) {
 
 		function(done) {
 
-			var soundcloudBaseUrl = 'https://api.soundcloud.com/tracks.json?';
+			var soundcloudBaseUrl = 'https://api.soundcloud.com/tracks';
 			var soundcloudParameters = {
-				q: 'cover+' + song + '+' + artist + 'NOT+karaoke',
+				q: 'cover+' + song + '+' + artist + '+NOT+karaoke',
 				filter: 'public',
 				order: 'hotness',
 				consumer_key: keys.soundcloudId
 			};
 			var soundcloudQueryArr = [];
-			for (var parameter in soundcloudParameters) {
-				soundcloudQueryArr.push(parameter + '=' + soundcloudParameters[parameter]);
+			for (var soundcloudFilter in soundcloudParameters) {
+				soundcloudQueryArr.push(soundcloudFilter + '=' + soundcloudParameters[soundcloudFilter]);
 			}
 			var soundcloudQuery = soundcloudQueryArr.join('&');
 
-			request(soundcloudBaseUrl + soundcloudQuery, function(error, response, body) {
+			request(soundcloudBaseUrl + '.json?' + soundcloudQuery, function(error, response, body) {
 				if (error) throw 'SoundCloud Search Error';
 
 				var soundcloudResultsAll = JSON.parse(body);
 				soundcloudResultsAll.sort(soundcloudCompare).reverse();
 
 				results.soundcloudResults = soundcloudResultsAll.slice(0, 5);
-				console.log(results.soundcloudResults);
 				done(null);
 			});
 		},
 
 		function(done) {
 
-			var youtubeBaseUrl = 'https://www.googleapis.com/youtube/v3/search?';
+			var youtubeBaseUrl = 'https://www.googleapis.com/youtube/v3/search';
 			var youtubeParameters = {
 				q: 'cover+' + song + artist,
 				part: 'snippet',
@@ -115,12 +118,12 @@ app.post('/search', function(req, res) {
 				key: keys.youtubeKey
 			};
 			var youtubeQueryArr = [];
-			for (var parameter in youtubeParameters) {
-				youtubeQueryArr.push(parameter + '=' + youtubeParameters[parameter]);
+			for (var youtubeFilter in youtubeParameters) {
+				youtubeQueryArr.push(youtubeFilter + '=' + youtubeParameters[youtubeFilter]);
 			}
 			var youtubeQuery = youtubeQueryArr.join('&');
 
-			request(youtubeBaseUrl + youtubeQuery, function(error, response, body) {
+			request(youtubeBaseUrl + '?' + youtubeQuery, function(error, response, body) {
 				if (error) throw 'YouTube Search Error';
 				var youtubeResults = JSON.parse(body);
 
@@ -129,6 +132,7 @@ app.post('/search', function(req, res) {
 			});
 		}
 	];
+
 	async.parallel(findResults, function(err) {
 		res.render('index', results);
 	});

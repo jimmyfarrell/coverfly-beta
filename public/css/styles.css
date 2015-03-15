@@ -1,0 +1,15 @@
+// CSS
+
+body {
+	text-align: center
+}
+
+.container {
+	text-align: center
+}
+
+.result {
+	display: inline,
+	float: left,
+	margin-bottom: 10px;
+}
