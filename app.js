@@ -14,7 +14,7 @@ app.set('views', __dirname);
 // app.set('js', __dirname + '/public/js');
 swig.setDefaults({ cache: false });
 
-app.listen(2289, function() {
+app.listen(2289, '0.0.0.0', function() {
 	console.log('Server is up and running...');
 });
 
@@ -135,6 +135,7 @@ app.post('/search', function(req, res) {
 
 	async.parallel(findResults, function(err) {
 		res.render('index', results);
+		console.log('Search: ' + artist + ' - ' + song);
 	});
 });
 
