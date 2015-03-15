@@ -14,30 +14,30 @@
 <body>
 	<div class="container">
 		<div id="search-bar">
-			<h1>Find Covers of a Song</h1>
+			<h1>So Many Covers, So Little Time</h1>
 			<form action="/search" method="POST">
 				<label for="artist_field">Artist:</label>
 				<input name="artist" type="text" id="artist_field"/>
-			  <label for="song_field">Song:</label>
-			  <input name="song" type="text" id="song_field"/>
-			  <input type="submit" value="Submit" />
+			  	<label for="song_field">Song:</label>
+			  	<input name="song" type="text" id="song_field"/>
+				<input type="submit" value="Submit" />
 			</form>
 		</div>
-		<div id="spotify-results" class="">
+		<div id="spotify-results" class="col-xs-4">
 			<h2 class="stream-service">Spotify</h2>
 
 			{% for track in spotifyResults %}
 			<div class="result spotify-track">
-				<p class="track-name">{{track.name}} – {{track.artists[0].name}}</p>
+				<p class="track-name">{{track.artists[0].name}}<br>{{track.name}}</p>
 				<audio controls>
-				 <source src='{{track.preview_url}}' type='audio/mpeg'>
-				 <p>Your user agent does not support the HTML5 Audio element.</p>
+					<source src='{{track.preview_url}}' type='audio/mpeg'>
+					<p>Your user agent does not support the HTML5 Audio element.</p>
 				</audio>
 			</div>
 			{% endfor %}
 
 		</div>
-		<div id="soundcloud-results" class="">
+		<div id="soundcloud-results" class="col-xs-4">
 			<h2 class="stream-service">SoundCloud</h2>
 
 			{% for track in soundcloudResults %}
@@ -47,18 +47,17 @@
 			{% endfor %}
 			
 		</div>
-		<div id="youtube-results" class="">
+		<div id="youtube-results" class="col-xs-4">
 			<h2 class="stream-service">YouTube</h2>
 
 			{% for video in youtubeResults %}
-			<div class="result youtube-video">
-				<iframe width="300" height="169" src="https://www.youtube.com/embed/{{video.id.videoId}}" frameborder="0" allowfullscreen></iframe>
-			</div>
+					<div class="result soundcloud-track">
+					<iframe width="300" height="169" src="https://www.youtube.com/embed/{{video.id.videoId}}" frameborder="0" allowfullscreen></iframe>
+					</div>
 			{% endfor %}
 
 		</div>
 	</div>
-	<script src="jquery-2.1.3.min.js"></script>
 	<script src="bootstrap.min.js"></script>
 </body>
 </html>

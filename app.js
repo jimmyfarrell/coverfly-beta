@@ -11,8 +11,8 @@ var keys = require('./keys');
 app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname);
-// app.set('css', __dirname + '/node_modules/bootstrap/dist/css');
-// app.set('js', __dirname + '/node_modules/bootstrap/dist/js');
+// app.set('css', __dirname + '/public/css');
+// app.set('js', __dirname + '/public/js');
 swig.setDefaults({ cache: false });
 
 app.listen(2289, function() {
@@ -33,14 +33,19 @@ app.get('/search', function(req, res) {
 });
 
 app.post('/search', function(req, res) {
-	var artist = req.body.artist.toLowerCase();
-	var song = req.body.song.toLowerCase();
+	
+	var artist = '';
+	artist = req.body.artist.toLowerCase().replace(/\W(the)\W/g, ' ').replace(/\Wa\W/g, ' ');
+	var song = '';
+	song = req.body.song.toLowerCase().replace(/\W(the)\W/g, ' ').replace(/\Wa\W/g, ' ');
+
 	var results = {};
 	var findResults = [
 		function(done) {
 
+			var spotifyBaseUrl = 'https://api.spotify.com/v1/search?';
 			var spotifyParameters = {
-				q: 'cover+track:"' + song + '"',
+				q: 'track:"' + song + '"+' + artist,
 				market: 'US',
 				type: 'track'
 			};
@@ -50,8 +55,7 @@ app.post('/search', function(req, res) {
 			}
 			var spotifyQuery = spotifyQueryArr.join('&');
 
-			request('https://api.spotify.com/v1/search?' + spotifyQuery, function(error, response, body) {
-				if (error) throw 'Spotify Search Error';
+			request(spotifyBaseUrl + spotifyQuery, function(error, response, body) {
 
 				var spotifyResultsAll = JSON.parse(body).tracks.items;
 				spotifyResultsAll.sort(spotifyCompare).reverse();
@@ -71,11 +75,12 @@ app.post('/search', function(req, res) {
 				done(null);
 			});
 		},
-		
+
 		function(done) {
 
+			var soundcloudBaseUrl = 'https://api.soundcloud.com/tracks.json?';
 			var soundcloudParameters = {
-				q: 'cover+"' + song + '"+' + artist,
+				q: 'cover+' + song + '+' + artist + 'NOT+karaoke',
 				filter: 'public',
 				order: 'hotness',
 				consumer_key: keys.soundcloudId
@@ -86,23 +91,25 @@ app.post('/search', function(req, res) {
 			}
 			var soundcloudQuery = soundcloudQueryArr.join('&');
 
-			request('https://api.soundcloud.com/tracks.json?' + soundcloudQuery, function(error, response, body) {
+			request(soundcloudBaseUrl + soundcloudQuery, function(error, response, body) {
 				if (error) throw 'SoundCloud Search Error';
 
 				var soundcloudResultsAll = JSON.parse(body);
-				// soundcloudResultsAll.sort(soundcloudCompare).reverse();
+				soundcloudResultsAll.sort(soundcloudCompare).reverse();
 
 				results.soundcloudResults = soundcloudResultsAll.slice(0, 5);
+				console.log(results.soundcloudResults);
 				done(null);
 			});
 		},
 
 		function(done) {
 
+			var youtubeBaseUrl = 'https://www.googleapis.com/youtube/v3/search?';
 			var youtubeParameters = {
-				q: 'cover+' + song,
+				q: 'cover+' + song + artist,
 				part: 'snippet',
-				order: 'viewCount',
+				order: 'relevance',
 				type: 'video',
 				videoEmbeddable: 'true',
 				key: keys.youtubeKey
@@ -113,12 +120,11 @@ app.post('/search', function(req, res) {
 			}
 			var youtubeQuery = youtubeQueryArr.join('&');
 
-			request('https://www.googleapis.com/youtube/v3/search?' + youtubeQuery, function(error, response, body) {
+			request(youtubeBaseUrl + youtubeQuery, function(error, response, body) {
 				if (error) throw 'YouTube Search Error';
 				var youtubeResults = JSON.parse(body);
 
 				results.youtubeResults = youtubeResults.items;
-				console.log(body);
 				done(null);
 			});
 		}
@@ -131,5 +137,11 @@ app.post('/search', function(req, res) {
 function spotifyCompare(a, b) {
 	if (a.popularity > b.popularity) return 1;
 	if (a.popularity < b.popularity) return -1;
+	return 0;
+}
+
+function soundcloudCompare(a, b) {
+	if (a.playback_count + a.favoritings_count > b.playback_count + b.favoritings_count) return 1;
+	if (a.playback_count + a.favoritings_count < b.playback_count + b.favoritings_count) return -1;
 	return 0;
 }
