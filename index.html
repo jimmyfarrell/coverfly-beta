@@ -29,7 +29,7 @@
 
 			{% for track in spotifyResults %}
 			<div class="result spotify-track">
-				<p class="track-name">{{track.artists[0].name}}<br>{{track.name}}</p>
+				<p class="track-name"><a href="{{track.external_urls.spotify}}" target="_blank">{{track.artists[0].name}}<br>{{track.name}}</a></p>
 				<audio controls>
 					<source src='{{track.preview_url}}' type='audio/mpeg'>
 					<p>Your user agent does not support the HTML5 Audio element.</p>
