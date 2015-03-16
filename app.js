@@ -10,11 +10,9 @@ var keys = require('./keys');
 app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname);
-// app.set('css', __dirname + '/public/css');
-// app.set('js', __dirname + '/public/js');
 swig.setDefaults({ cache: false });
 
-app.listen(2289, '0.0.0.0', function() {
+app.listen(2289, function() {
 	console.log('Server is up and running...');
 });
 
@@ -49,7 +47,7 @@ app.post('/search', function(req, res) {
 
 			var spotifyBaseUrl = 'https://api.spotify.com/v1/search';
 			var spotifyParameters = {
-				q: 'track:"' + song + '"+' + artist,
+				q: 'track:"' + song + '"+' + artist + '+NOT+karaoke',
 				market: 'US',
 				type: 'track'
 			};
@@ -110,7 +108,7 @@ app.post('/search', function(req, res) {
 
 			var youtubeBaseUrl = 'https://www.googleapis.com/youtube/v3/search';
 			var youtubeParameters = {
-				q: 'cover+' + song + artist,
+				q: 'cover+' + song + '+' + artist + '+-karaoke+-lyrics',
 				part: 'snippet',
 				order: 'relevance',
 				type: 'video',
